@@ -260,7 +260,11 @@ start_button.place(x=150, y=500)  # Adjust x and y as needed based on window siz
 # Main screen
 main_frame = tk.Frame(root, bg="#333333")
 
-image_frame = tk.Frame(main_frame, bg="#333333")
+# Left frame for images and tables
+left_frame = tk.Frame(main_frame, bg="#333333")
+left_frame.pack(side="left", fill="y", padx=20, pady=20)
+
+image_frame = tk.Frame(left_frame, bg="#333333")
 image_frame.pack(pady=20)
 
 original_image_label = tk.Label(image_frame, bg="#333333")
@@ -270,10 +274,10 @@ edited_image_label = tk.Label(image_frame, bg="#333333")
 edited_image_label.pack(side="left", padx=10)
 
 # Original and edited colors tables
-original_colors_frame = tk.Frame(main_frame, bg="#333333")
+original_colors_frame = tk.Frame(left_frame, bg="#333333")
 original_colors_frame.pack(side="left", padx=20, pady=10)
 
-edited_colors_frame = tk.Frame(main_frame, bg="#333333")
+edited_colors_frame = tk.Frame(left_frame, bg="#333333")
 edited_colors_frame.pack(side="left", padx=20, pady=10)
 
 columns = ("Color Name", "Percentage", "Hex Code")
@@ -292,57 +296,65 @@ for col in columns:
     tree_edited.column(col, width=150)
 tree_edited.pack()
 
-# Adjustments and download section
-adjust_frame = tk.Frame(main_frame, bg="#333333")
-adjust_frame.pack(pady=10)
+# Right section frame for adjustments and buttons
+right_frame = tk.Frame(main_frame, bg="#444444", width=400)
+right_frame.pack(side="right", fill="y", ipadx=200)
 
-brightness_label = tk.Label(adjust_frame, text="Brightness", bg="#333333", fg="white")
+logo_image = tk.PhotoImage(file="colormagix logo.png")
+logo_label = tk.Label(right_frame, image=logo_image, bg="#444444")
+logo_label.pack()
+
+# Adjustments and download section
+adjust_frame = tk.Frame(right_frame, bg="#444444")
+adjust_frame.pack(pady=50, padx=10)
+
+brightness_label = tk.Label(adjust_frame, text="Brightness", bg="#444444", fg="white")
 brightness_label.grid(row=0, column=0, padx=5)
-brightness_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#333333", fg="white", troughcolor="#FFD700")
+brightness_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#444444", fg="white", troughcolor="#FFD700")
 brightness_scale.set(1.0)
 brightness_scale.grid(row=0, column=1, padx=5)
 
-contrast_label = tk.Label(adjust_frame, text="Contrast", bg="#333333", fg="white")
+contrast_label = tk.Label(adjust_frame, text="Contrast", bg="#444444", fg="white")
 contrast_label.grid(row=1, column=0, padx=5)
-contrast_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#333333", fg="white", troughcolor="#FFD700")
+contrast_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#444444", fg="white", troughcolor="#FFD700")
 contrast_scale.set(1.0)
 contrast_scale.grid(row=1, column=1, padx=5)
 
-high_label = tk.Label(adjust_frame, text="High", bg="#333333", fg="white")
+high_label = tk.Label(adjust_frame, text="High", bg="#444444", fg="white")
 high_label.grid(row=2, column=0, padx=5)
-high_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#333333", fg="white", troughcolor="#FFD700")
+high_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#444444", fg="white", troughcolor="#FFD700")
 high_scale.set(1.0)
 high_scale.grid(row=2, column=1, padx=5)
 
-mid_label = tk.Label(adjust_frame, text="Mid", bg="#333333", fg="white")
+mid_label = tk.Label(adjust_frame, text="Mid", bg="#444444", fg="white")
 mid_label.grid(row=3, column=0, padx=5)
-mid_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#333333", fg="white", troughcolor="#FFD700")
+mid_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#444444", fg="white", troughcolor="#FFD700")
 mid_scale.set(1.0)
 mid_scale.grid(row=3, column=1, padx=5)
 
-low_label = tk.Label(adjust_frame, text="Low", bg="#333333", fg="white")
+low_label = tk.Label(adjust_frame, text="Low", bg="#444444", fg="white")
 low_label.grid(row=4, column=0, padx=5)
-low_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#333333", fg="white", troughcolor="#FFD700")
+low_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#444444", fg="white", troughcolor="#FFD700")
 low_scale.set(1.0)
 low_scale.grid(row=4, column=1, padx=5)
 
 # Add the Saturation Slider in the Adjustments Section
-saturation_label = tk.Label(adjust_frame, text="Saturation", bg="#333333", fg="white")
+saturation_label = tk.Label(adjust_frame, text="Saturation", bg="#444444", fg="white")
 saturation_label.grid(row=5, column=0, padx=5)
-saturation_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#333333", fg="white", troughcolor="#FFD700")
+saturation_scale = tk.Scale(adjust_frame, from_=0.0, to=2.0, resolution=0.1, orient="horizontal", command=lambda e: adjust_image(), state="disabled", bg="#444444", fg="white", troughcolor="#FFD700")
 saturation_scale.set(1.0)
 saturation_scale.grid(row=5, column=1, padx=5)
 
-download_button = tk.Button(adjust_frame, text="Download Image", command=download_image, font=("Helvetica", 12), bg="#FFA500", fg="#000000", activebackground="#FFD700", activeforeground="#000000")
-download_button.grid(row=6, column=0, columnspan=2, pady=10)
-
-accuracy_label = tk.Label(main_frame, text="Model Accuracy: ", font=("Helvetica", 14), bg="#333333", fg="white")
-accuracy_label.pack(pady=10)
-
-analyze_button = tk.Button(main_frame, text="Upload and Analyze Image", command=analyze_image, font=("Helvetica", 14, "bold"), bg="#FFA500", fg="#000000", activebackground="#FFD700", activeforeground="#000000")
+analyze_button = tk.Button(right_frame, text="Upload Image", command=analyze_image, font=("Helvetica", 14, "bold"), bg="#FFA500", fg="#000000", activebackground="#FFD700", activeforeground="#000000")
 analyze_button.pack(pady=10)
 
-back_button = tk.Button(main_frame, text="Back to Home", command=go_to_home, font=("Helvetica", 14), bg="#FFA500", fg="#000000", activebackground="#FFD700", activeforeground="#000000")
+download_button = tk.Button(right_frame, text="Download Image", command=download_image, font=("Helvetica", 14, "bold"), bg="#FFA500", fg="#000000", activebackground="#FFD700", activeforeground="#000000")
+download_button.pack(pady=10)
+
+accuracy_label = tk.Label(right_frame, text="Model Accuracy: ", font=("Helvetica", 14), bg="#444444", fg="white")
+accuracy_label.pack(pady=10)
+
+back_button = tk.Button(right_frame, text="Back to Home", command=go_to_home, font=("Helvetica", 14), bg="#FFA500", fg="#000000", activebackground="#FFD700", activeforeground="#000000")
 back_button.pack(pady=10)
 
 root.mainloop()
