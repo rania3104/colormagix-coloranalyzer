@@ -9,14 +9,15 @@ from tkinter import filedialog, ttk
 from sklearn.metrics import accuracy_score
 
 # Load the dataset
-data_path = 'color_names.csv'
+data_path = 'color_names.csv'  # Dataset path
 colors_df = pd.read_csv(data_path)
 colors_df['RGB'] = colors_df[['Red (8 bit)', 'Green (8 bit)', 'Blue (8 bit)']].values.tolist()
 
+
 # Function to extract dominant colors from the image
 def extract_colors(image, n_colors=10):
-    image = image.resize((100, 100))
-    img_data = np.array(image).reshape(-1, 3)
+    image = image.resize((100, 100))  # Resize for faster processing
+    img_data = np.array(image).reshape(-1, 3)  # Flatten image into RGB values
 
     kmeans = KMeans(n_clusters=n_colors, random_state=42)
     kmeans.fit(img_data)
@@ -37,8 +38,8 @@ def extract_colors(image, n_colors=10):
 # Function to match colors with the dataset
 def match_colors(image_colors):
     results = []
-    dataset_colors = np.array(colors_df['RGB'].tolist())
-
+    dataset_colors = np.array(colors_df['RGB'].tolist())  # Dataset colors
+    
     for color, percentage in image_colors.items():
         closest_idx, _ = pairwise_distances_argmin_min([color], dataset_colors)
         matched_color_name = colors_df.iloc[closest_idx[0]]['Name']
@@ -46,15 +47,30 @@ def match_colors(image_colors):
 
     return results
 
-# Function to display an image in a specified label
-def display_image(img, label):
-    img.thumbnail((300, 300))
-    tk_image = ImageTk.PhotoImage(img)
-    label.config(image=tk_image)
-    label.image = tk_image
+# Function to update both original and edited color tables
+def update_color_tables():
+    global matched_colors_original, matched_colors_edited
 
-# Function to calculate model accuracy
-def calculate_accuracy(image_colors):
+    # Clear the existing rows in both tables
+    for row in tree_original.get_children():
+        tree_original.delete(row)
+    for row in tree_edited.get_children():
+        tree_edited.delete(row)
+
+    # Insert new rows into the original colors table
+    for color_name, percentage, rgb in matched_colors_original:
+        hex_color = f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+        tree_original.insert("", "end", values=(color_name, f"{percentage:.2f}%", hex_color), tags=(hex_color,))
+        tree_original.tag_configure(hex_color, background=hex_color)
+
+    # Insert new rows into the edited colors table
+    for color_name, percentage, rgb in matched_colors_edited:
+        hex_color = f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
+        tree_edited.insert("", "end", values=(color_name, f"{percentage:.2f}%", hex_color), tags=(hex_color,))
+        tree_edited.tag_configure(hex_color, background=hex_color)
+
+# Function to compute accuracy between original image and dataset
+def compute_accuracy(image_colors):
     dataset_colors = np.array(colors_df['RGB'].tolist())
     predicted_colors = list(image_colors.keys())
     
@@ -67,101 +83,89 @@ def calculate_accuracy(image_colors):
     
     # Calculate accuracy
     accuracy = accuracy_score(ground_truth_labels, predicted_labels)
-    return accuracy
+    # Update the accuracy label
+    accuracy_label.config(text=f"Accuracy: {accuracy:.2%}")
 
-# Use this function after extracting colors in the analyze_image function
+# Function to analyze the image
 def analyze_image():
     global original_image, displayed_image, matched_colors_original, matched_colors_edited
 
+    # Ask user to select an image
     file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
     if not file_path:
         return
 
+    # Open and process the image
     original_image = Image.open(file_path)
     displayed_image = original_image.copy()
 
+    # Extract dominant colors from the original image
     original_colors = extract_colors(original_image)
     matched_colors_original = match_colors(original_colors)
 
-    # Calculate accuracy and print it
-    accuracy = calculate_accuracy(original_colors)
-    accuracy_label.config(text=f"Model Accuracy: {accuracy * 100:.2f}%")
+    # Set the "edited" table to the same initial data as the "original" image
+    matched_colors_edited = matched_colors_original.copy()
 
-    # Clear the treeviews
-    for row in tree_original.get_children():
-        tree_original.delete(row)
-    for row in tree_edited.get_children():
-        tree_edited.delete(row)
+    # Update the color tables
+    update_color_tables()
 
-    # Populate the original colors table
-    for color_name, percentage, rgb in matched_colors_original:
-        hex_color = f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
-        tree_original.insert("", "end", values=(color_name, f"{percentage:.2f}%", hex_color), tags=(hex_color,))
-        tree_original.tag_configure(hex_color, background=hex_color)
-
+    # Display the original and edited images
     display_image(original_image, original_image_label)
     display_image(displayed_image, edited_image_label)
 
-    # Enable sliders after image is uploaded
+    # Compute accuracy for the original image and the dataset
+    compute_accuracy(original_colors)
+
+    # Enable the sliders for adjustment
     enable_sliders()
-
-# Function to update the edited colors dynamically
-def update_edited_colors():
-    global displayed_image, matched_colors_edited
-
-    edited_colors = extract_colors(displayed_image)
-    matched_colors_edited = match_colors(edited_colors)
-
-    # Clear the edited colors table
-    for row in tree_edited.get_children():
-        tree_edited.delete(row)
-
-    # Populate the edited colors table
-    for color_name, percentage, rgb in matched_colors_edited:
-        hex_color = f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
-        tree_edited.insert("", "end", values=(color_name, f"{percentage:.2f}%", hex_color), tags=(hex_color,))
-        tree_edited.tag_configure(hex_color, background=hex_color)
 
 # Function to adjust brightness, contrast, and color balance
 def adjust_image():
-    global displayed_image
+    global original_image, displayed_image, matched_colors_original, matched_colors_edited
 
-    # Check if an image has been loaded
-    if "original_image" not in globals() or original_image is None:
-        return  # Do nothing if no image has been loaded
-
-    # Perform adjustments if the image exists
+    # Perform adjustments
     brightness_factor = brightness_scale.get()
     contrast_factor = contrast_scale.get()
     saturation_factor = saturation_scale.get()
 
+    # Adjust brightness, contrast, and color
     edited_image = ImageEnhance.Brightness(original_image).enhance(brightness_factor)
     edited_image = ImageEnhance.Contrast(edited_image).enhance(contrast_factor)
     edited_image = ImageEnhance.Color(edited_image).enhance(saturation_factor)
 
+    # Update the edited image with tone adjustments
     high_factor = high_scale.get()
     mid_factor = mid_scale.get()
     low_factor = low_scale.get()
 
     img_data = np.array(edited_image, dtype=np.float32) / 255.0
-
-    # Apply simple adjustments for high, mid, and low tones
     img_data = np.clip(img_data * [high_factor, mid_factor, low_factor], 0, 1)
     displayed_image = Image.fromarray((img_data * 255).astype(np.uint8))
 
-    display_image(displayed_image, edited_image_label)
-    update_edited_colors()
+    # Extract colors again after adjustments
+    edited_colors = extract_colors(displayed_image)
+    matched_colors_edited = match_colors(edited_colors)
 
-# Function to disable sliders
-def disable_sliders():
-    
-    brightness_scale.config(state="disabled")
-    contrast_scale.config(state="disabled")
-    saturation_scale.config(state="disabled")
-    high_scale.config(state="disabled")
-    mid_scale.config(state="disabled")
-    low_scale.config(state="disabled")
-    
+    # Update the color tables with the new edited colors
+    update_color_tables()
+
+    # Display the edited image
+    display_image(displayed_image, edited_image_label)
+
+# Function to display the image in the GUI
+def display_image(image, label):
+    # Maintain aspect ratio and resize
+    base_width = 400  # Adjusted width
+    w_percent = (base_width / float(image.size[0]))
+    h_size = int((float(image.size[1]) * float(w_percent)))
+    image = image.resize((base_width, h_size))
+
+    # Convert to Tkinter-compatible image
+    image_tk = ImageTk.PhotoImage(image)
+
+    # Center the image in the label cell
+    label.config(image=image_tk)
+    label.image = image_tk
 
 # Function to enable sliders
 def enable_sliders():
@@ -177,8 +181,15 @@ def enable_sliders():
     high_scale.set(1.0)
     mid_scale.set(1.0)
     low_scale.set(1.0)
-    
 
+# Function to disable sliders
+def disable_sliders():
+    brightness_scale.config(state="disabled")
+    contrast_scale.config(state="disabled")
+    saturation_scale.config(state="disabled")
+    high_scale.config(state="disabled")
+    mid_scale.config(state="disabled")
+    low_scale.config(state="disabled")
 # Function to download the edited image
 def download_image():
     if displayed_image:
@@ -255,7 +266,7 @@ start_button = tk.Button(
 )
 
 # Place the button at the bottom-left corner
-start_button.place(x=100, y=500)  # Adjust x and y as needed based on window size
+start_button.place(x=100, y=500)  
 
 # Main screen
 main_frame = tk.Frame(root, bg="#333333")
