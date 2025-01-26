@@ -155,7 +155,7 @@ def adjust_image():
 # Function to display the image in the GUI
 def display_image(image, label):
     # Maintain aspect ratio and resize
-    base_width = 400  # Adjusted width
+    base_width = 450  # Adjusted width
     w_percent = (base_width / float(image.size[0]))
     h_size = int((float(image.size[1]) * float(w_percent)))
     image = image.resize((base_width, h_size))
